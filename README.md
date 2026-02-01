@@ -12,7 +12,7 @@ In this activity, we have visualized the data from the 2023 growing season on th
 This activity is designed for youths ages 10-18. I have provided the data organization, materials and instructions to create single strand beaded bracelets that visualize the air temperature data from Qikiqtaruk - Herschel Island during the 2023 field season. 
 
 ### Bracelet Sizes
-We will use seed beads (glass) or pony beads (plastic) for this activity. Seed bead sizes are typically denoted by a number followed by a slash and another number (i.e. 11/0, 8/0, or 15/0) or by the diameter of the bead in mm (i.e. 11/0 is 2.1mm diameter). The number before the slash indicates the number of seed beads that can fit within one inch. 11/0 is the standard size for seed beads, but the holes are quite small, so 8/0 could work better for bracelet making, especially if you wanted the bracelet making to take less time. 
+We will use seed beads (glass) or pony beads (plastic) for this activity. Seed bead sizes are typically denoted by a number followed by a slash and another number (i.e. 11/0, 8/0, or 15/0) or by the diameter of the bead in mm (i.e. 11/0 is 2.1mm diameter). The number before the slash indicates the number of seed beads that can fit within one inch. 11/0 (2mm) is the standard size for seed beads, but the holes are quite small, so 8/0 (3mm) could work better for bracelet making, especially if you wanted the bracelet making to take less time. 
 
 #### Wrist sizes and number of beads with size 8/0
 16.5cm or 6.5" : 52 beads
