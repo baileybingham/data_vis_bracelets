@@ -17,6 +17,18 @@ library(lubridate)
 library(zoo)
 
 ### IMPORT AGGREGATED DAILY TOMST DATA ###
+eccc<-read.csv("~/1. PhD Research/GitHub/Growth-chambers/export_data/ECCC_dailymeantemp_1996-2025.csv") %>%
+  drop_na()%>%
+  # Read datetime as a date
+  mutate(dummydate = ymd(dummydate)) %>% 
+  # change column headers
+  select(dummydate,Mean_Temp, Max_Temp, Min_Temp)  %>%
+  rename(
+    eccc_mean_temp = Mean_Temp,
+    eccc_max_temp = Max_Temp,
+    eccc_min_temp = Min_Temp
+  )
+
 tomst<-read.csv("~/1. PhD Research/GitHub/TOMST-QHI/export_data/2025_TOMSTdata_preprocessed_daily.csv") %>%
     # Read datetime as a date
   mutate(datetime = ymd(datetime))%>%
@@ -85,8 +97,7 @@ ggplot(tomst_daily_avg, aes(x = datetime, y = QHI_mean)) +
        x = "Date",
        y = "Mean Daily Air Temperature") 
 
-
-
+### Calculate rolling average
 rollavg <-tomst_daily_avg %>%
    mutate(
     # Rolling Average: Smoothes data, but lowers peaks
@@ -94,8 +105,10 @@ rollavg <-tomst_daily_avg %>%
     # Rolling Max: Preserves the heatwave intensity for the week
     rolling_max = rollmax(QHI_max, k = 6, fill = NA, align = "center"),
     # Rolling Min: Captures the coolest dip of the week
-    rolling_min = rollapply(QHI_min, width = 6, FUN = min, fill = NA, align = "center"))  %>%
+    rolling_min = rollapply(QHI_min, width = 6, FUN = min, fill = NA, align = "center"))
+
   # Select 52 points (one for each bead)
+rollweekly<- rollavg %>%
   slice(seq(1, n(), by = 7)) %>%
   drop_na()
 
@@ -110,3 +123,42 @@ rollavg %>%
        y = "Degrees (C)") +
   theme_minimal()
 
+#### Combine TOMST with ECCC to compare 2023 to the 30 year average
+cdata<-cbind(eccc, rollavg)
+
+# graph it
+ggplot(cdata, aes(x = dummydate)) +
+  geom_hline(yintercept = 0, color = "darkred", linewidth = 0.5, linetype = "dashed") +
+  #ECCC Ribbon (Grey Background)
+  geom_ribbon(aes(ymin = eccc_min_temp, ymax = eccc_max_temp),fill = "grey", alpha = 0.3) +
+  #ECCC Mean Line
+  geom_line(aes(y = eccc_mean_temp), color = "grey20", size = 0.8) +
+  #QHI Ribbon 
+  geom_ribbon(aes(ymin = QHI_min, ymax = QHI_max), fill = "red", alpha = 0.3) +
+  #QHI Mean Line
+  geom_line(aes(y = QHI_mean), color = "red", size = 1) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 month") +
+  labs(title = "Herschel Island Temperature Comparison",
+       subtitle = "Grey: ECCC (30-yr) | Blue: QHI (Tomst 2023)",
+       x = "Date",
+       y = "Temperature (°C)") +
+  theme_minimal()
+
+
+# what about with rolling 2023 averages?
+ggplot(cdata, aes(x = dummydate)) +
+  geom_hline(yintercept = 0, color = "red", linewidth = 0.5, linetype = "dashed") +
+  #ECCC Ribbon (Grey Background)
+  geom_ribbon(aes(ymin = eccc_min_temp, ymax = eccc_max_temp),fill = "grey20", alpha = 0.3) +
+  #ECCC Mean Line
+  geom_line(aes(y = eccc_mean_temp), color = "grey20", size = 0.8) +
+  #QHI actual extremes Ribbon 
+  geom_ribbon(aes(ymin = QHI_min, ymax = QHI_max), fill = "darkred", alpha = 0.3) +
+  #QHI Mean rolling average Line
+  geom_line(aes(y = rolling_avg), color = "darkred", size = 1) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 month") +
+  labs(title = "QHI ECCC weather station historical temps compared to 2023 TOMST rolling average",
+       subtitle = "Grey: ECCC (30-yr) | Red: rolling average and actual max and mins of the TOMST (2023)",
+       x = "Date",
+       y = "Temperature (°C)") +
+  theme_minimal()
