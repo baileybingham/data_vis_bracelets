@@ -184,7 +184,7 @@ range(crop$QHI_mean, na.rm = TRUE)
 min_temp <- -16
 max_temp <- 19
 
-# Create 13 bins
+# Create 10 bins
 crop$temp_bins <- cut(crop$QHI_mean, 
                             breaks = seq(min_temp, max_temp, length.out = 11), 
                             include.lowest = TRUE)
@@ -195,21 +195,52 @@ my_colors <- colorRampPalette(c("darkblue","blue", "white","red", "darkred"))(10
 
 # Create letter labels
 num_bins <- length(levels(crop$temp_bins))
-letter_labels <- paste0(LETTERS[1:num_bins], ": ", levels(crop$temp_bins))
+# change legend labels
+raw_levels <- levels(crop$temp_bins)
+# Use regex to remove brackets [ ] and parentheses ( )
+# We then replace the comma with "°C to " and add "°C" to the end
+clean_levels <- gsub("[^-0-9.]+", " ", raw_levels)
+clean_levels <- trimws(clean_levels)
+clean_levels <- gsub(" ", "°C to ", clean_levels)
+clean_levels <- paste0(clean_levels, "°C")
+# Combine with the LETTERS for your final legend text
+letter_labels <- paste0(LETTERS[1:num_bins], ": ", clean_levels)
+crop$bin_letter <- LETTERS[as.numeric(crop$temp_bins)]
+text_colours <- c("white", "white", "white", "white", "black", 
+                  "black", "black", "black", "black", "white")
+
+
 
 ggplot(crop, aes(x = datetime, y = 1, fill = temp_bins)) +
   geom_tile(color = "white", linewidth = 0.1)  +
+  geom_text(aes(y = 1.45,label = bin_letter, color = temp_bins), 
+            size = 3, fontface = "bold") +
+  # Apply the conditional text colours
+  scale_color_manual(values = text_colours, guide = "none") + 
   scale_fill_manual(values = my_colors, labels = letter_labels)+ 
   scale_x_date(date_breaks = "1 week", date_labels = "%b %d") +
   labs(title = "2023 Growing Season on Qikiqtaruk - Herschel Island",
        subtitle = "Daily average temperature ranges over 3 day periods on QHI.",
        x = "Date", 
-       fill = "Bead colour and Temp range") +
+       fill = "Bead colour and Temp range (°C)") +
   theme_minimal()  +
   theme(
     axis.title.y = element_blank(),
     axis.text.y  = element_blank(),
-    axis.text.x  = element_text(angle = 70, vjust = 0.5, size = 6),
+    axis.text.x  = element_text(angle = 70, vjust = 0.5, size = 8),
     legend.text = element_text(size = 8)
   )
 
+# Create a purchasing list
+bead_shopping_list <- crop %>%
+  group_by(temp_bins) %>%
+  summarise(beads_per_bracelet = n()) %>%
+  mutate(
+    letter = LETTERS[1:n()],
+    # Multiply the daily count by 100
+    total_beads_needed = beads_per_bracelet * 100,
+    temp_range = clean_levels # Uses "-16°C to -12.5°C" format
+  ) %>%
+  select(letter, beads_per_bracelet,total_beads_needed, temp_range)
+
+print(bead_shopping_list)
