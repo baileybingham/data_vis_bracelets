@@ -231,6 +231,8 @@ ggplot(crop, aes(x = datetime, y = 1, fill = temp_bins)) +
     legend.text = element_text(size = 8)
   )
 
+### I like it better without the rolling averages, so let's go with this one!
+
 # Create a purchasing list
 bead_shopping_list <- crop %>%
   group_by(temp_bins) %>%
