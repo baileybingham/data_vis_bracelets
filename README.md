@@ -27,3 +27,6 @@ I will design the bracelet pattern to be 8.5". If the students' wrist is smaller
 
 ### Bracelet Pattern
 ![bracelet pattern](QHI_2023_temp_bracelet_pattern.png)
+
+### Bracelet Instructions
+![Pamphlet to be distributed to students while making bracelets](Bracelet_Instructions.png)
