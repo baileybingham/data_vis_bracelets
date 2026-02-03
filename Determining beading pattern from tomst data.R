@@ -166,37 +166,36 @@ ggplot(cropbinned, aes(x = datetime, y = 1, fill = temp_bins)) +
     axis.text.x  = element_text(angle = 70, vjust = 0.5, size = 6)
   )
 
-
 #################################################################################
-#### Let's try it without the rolling average ####
+#### Trying it with Max temps ####
 
 # Bin the year into 3 day sections by rolling average
-bin<- tomst_daily_avg %>%
+maxbin<- tomst_daily_avg %>%
   slice(seq(1, n(), by = 3)) %>%
   drop_na()
 
-crop <- bin %>%
+maxcrop <- maxbin %>%
   filter(datetime >= "2023-03-26" & datetime <= "2023-11-08")
 
-range(crop$QHI_mean, na.rm = TRUE)
+range(maxcrop$QHI_max, na.rm = TRUE)
 
 # Define your temperature range
-min_temp <- -16
-max_temp <- 19
+min_temp <- -8
+max_temp <- 33
 
 # Create 10 bins
-crop$temp_bins <- cut(crop$QHI_mean, 
-                            breaks = seq(min_temp, max_temp, length.out = 11), 
-                            include.lowest = TRUE)
-unique(crop$temp_bins) # view the bins
+maxcrop$temp_bins <- cut(crop$QHI_max, 
+                      breaks = seq(min_temp, max_temp, length.out = 11), 
+                      include.lowest = TRUE)
+unique(maxcrop$temp_bins) # view the bins
 
 # Create a 10-color palette from "RdBu" (Red to Blue)
 my_colors <- colorRampPalette(c("darkblue","blue", "white","red", "darkred"))(10)
 
 # Create letter labels
-num_bins <- length(levels(crop$temp_bins))
+num_bins <- length(levels(maxcrop$temp_bins))
 # change legend labels
-raw_levels <- levels(crop$temp_bins)
+raw_levels <- levels(maxcrop$temp_bins)
 # Use regex to remove brackets [ ] and parentheses ( )
 # We then replace the comma with "°C to " and add "°C" to the end
 clean_levels <- gsub("[^-0-9.]+", " ", raw_levels)
@@ -205,13 +204,13 @@ clean_levels <- gsub(" ", "°C to ", clean_levels)
 clean_levels <- paste0(clean_levels, "°C")
 # Combine with the LETTERS for your final legend text
 letter_labels <- paste0(LETTERS[1:num_bins], ": ", clean_levels)
-crop$bin_letter <- LETTERS[as.numeric(crop$temp_bins)]
+maxcrop$bin_letter <- LETTERS[as.numeric(crop$temp_bins)]
 text_colours <- c("white", "white", "white", "white", "black", 
                   "black", "black", "black", "black", "white")
 
 
 
-ggplot(crop, aes(x = datetime, y = 1, fill = temp_bins)) +
+ggplot(maxcrop, aes(x = datetime, y = 1, fill = temp_bins)) +
   geom_tile(color = "white", linewidth = 0.1)  +
   geom_text(aes(y = 1.45,label = bin_letter, color = temp_bins), 
             size = 3, fontface = "bold") +
@@ -229,6 +228,79 @@ ggplot(crop, aes(x = datetime, y = 1, fill = temp_bins)) +
     axis.text.y  = element_blank(),
     axis.text.x  = element_text(angle = 70, vjust = 0.5, size = 8),
     legend.text = element_text(size = 8)
+  )
+
+
+
+#################################################################################
+#### Let's try it without the rolling average ####
+
+# Bin the year into 3 day sections by rolling average
+bin<- tomst_daily_avg %>%
+  slice(seq(1, n(), by = 3)) %>%
+  drop_na()
+
+crop <- bin %>%
+  filter(datetime >= "2023-03-21" & datetime <= "2023-11-15")
+
+range(crop$QHI_mean, na.rm = TRUE)
+
+# Define your temperature range
+min_temp <- -16
+max_temp <- 19
+
+# Create 10 bins
+crop$temp_bins <- cut(crop$QHI_mean, 
+                            breaks = seq(min_temp, max_temp, length.out = 11), 
+                            include.lowest = TRUE)
+unique(crop$temp_bins) # view the bins
+
+# Create a 10-color palette from "RdBu" (Red to Blue)
+my_colors <- colorRampPalette(c(
+  "#0D1B7A", "#044BA5", "#157CAF","#93C6D8", "#EDF2F0", 
+  "#FAF3E0", "#E69804", "#CE6001","#C60C30", "#800020"
+))(10)
+
+# Create letter labels
+num_bins <- length(levels(crop$temp_bins))
+# change legend labels
+raw_levels <- levels(crop$temp_bins)
+# Use regex to remove brackets [ ] and parentheses ( )
+# We then replace the comma with "°C to " and add "°C" to the end
+clean_levels <- gsub("[^-0-9.]+", " ", raw_levels)
+clean_levels <- trimws(clean_levels)
+clean_levels <- gsub(" ", "°C to ", clean_levels)
+clean_levels <- paste0(clean_levels, "°C")
+# Combine with the LETTERS for your final legend text
+letter_labels <- paste0(LETTERS[1:num_bins], ": ", clean_levels)
+crop$bin_letter <- LETTERS[as.numeric(crop$temp_bins)]
+text_colours <- c("white", "white", "white", "white", "black", 
+                  "black", "black", "white", "white", "white")
+
+
+
+ggplot(crop, aes(x = datetime, y = 1, fill = temp_bins)) +
+  geom_tile(color = "white", linewidth = 0.1, )  +
+  geom_text(aes(y = 1.45,label = bin_letter, color = temp_bins), 
+            size = 4, fontface = "bold") +
+  # Apply the conditional text colours
+  scale_color_manual(values = text_colours, guide = "none") + 
+  scale_fill_manual(values = my_colors, labels = letter_labels)+ 
+  scale_x_date (breaks = seq(as.Date("2023-03-18"), as.Date("2023-11-19"), by = "1 week"), 
+date_labels = "%b %d") +
+  labs(
+     #   title = "2023 Growing Season on Qikiqtaruk - Herschel Island",
+     #  subtitle = "Daily average temperature ranges over 3 day periods on QHI.",
+       x = "Date", 
+       fill = "Bead colour and Temp range (°C)") +
+  theme_minimal()  +
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y  = element_blank(),
+    #panel.grid = element_blank(), 
+    axis.ticks.x = element_line(color = "black"),
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, size = 12),
+    legend.text = element_text(size = 12)
   )
 
 ### I like it better without the rolling averages, so let's go with this one!
