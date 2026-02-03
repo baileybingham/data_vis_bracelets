@@ -24,3 +24,6 @@ We will use seed beads (glass) or pony beads (plastic) for this activity. Seed b
 24cm or 9.5" : 76 beads
 
 I will design the bracelet pattern to be 8.5". If the students' wrist is smaller, they can start their bracelet further into the season. If it is larger than that, then they can add some solid coloured beads on either side to make up the space. 
+
+### Bracelet Pattern
+![bracelet pattern](QHI_2023_temp_bracelet_pattern.png)
