@@ -321,30 +321,31 @@ print(bead_shopping_list)
 range(bin$QHI_mean, na.rm = TRUE)
 
 # Define your temperature range
-min_temp <- -19.5
+min_temp <- -23
 max_temp <- 19
 breaks_seq <- seq(min_temp, max_temp, length.out = 1)
 
 # 2. Pre-process the data: 
 # Replace anything lower than -19.5 with -19.5
-bin$QHI_mean <- pmax(bin$QHI_mean, min_temp)
+bin1 <- bin
+bin1$QHI_mean <- pmax(bin$QHI_mean, min_temp)
 
-# Create 11 bins
-bin$temp_bins <- cut(bin$QHI_mean, 
-                      breaks = seq(min_temp, max_temp, length.out = 12), 
+# Create 12 bins
+bin1$temp_bins <- cut(bin1$QHI_mean, 
+                      breaks = seq(min_temp, max_temp, length.out = 13), 
                       include.lowest = TRUE)
-unique(bin$temp_bins) # view the bins
+unique(bin1$temp_bins) # view the bins
 
 # Create a 11-color palette from "RdBu" (Red to Blue)
 my_colors <- colorRampPalette(c(
-  "#0D1B7A", "#044BA5", "#157CAF","#93C6D8", "#EDF2F0", 
+  "black", "#0D1B7A", "#044BA5", "#157CAF","#93C6D8", "#EDF2F0", 
   "#FAF3E0","#F2D379", "#E69804", "#CE6001","#C60C30", "#800020"
-))(11)
+))(12)
 
 # Create letter labels
-num_bins <- length(levels(bin$temp_bins))
+num_bins <- length(levels(bin1$temp_bins))
 # change legend labels
-raw_levels <- levels(bin$temp_bins)
+raw_levels <- levels(bin1$temp_bins)
 # Use regex to remove brackets [ ] and parentheses ( )
 # We then replace the comma with "°C to " and add "°C" to the end
 clean_levels <- gsub("[^-0-9.]+", " ", raw_levels)
@@ -353,15 +354,15 @@ clean_levels <- gsub(" ", "°C to ", clean_levels)
 clean_levels <- paste0(clean_levels, "°C")
 # Combine with the LETTERS for your final legend text
 letter_labels <- paste0(LETTERS[1:num_bins], ": ", clean_levels)
-letter_labels[1] <- "A: Below -16°C"
-bin$bin_letter <- LETTERS[as.numeric(bin$temp_bins)]
-text_colours <- c("white", "white", "white", "white", "white", 
-                  "black", "black", "white", "white", "white",
+letter_labels[1] <- "A: Below -19.5°C"
+bin1$bin_letter <- LETTERS[as.numeric(bin1$temp_bins)]
+text_colours <- c("white", "white", "white", "white", "black", 
+                  "black", "black", "black", "white", "white",
                   "white", "white", "white", "white")
 
 
 
-ggplot(bin, aes(x = datetime, y = 1, fill = temp_bins)) +
+ggplot(bin1, aes(x = datetime, y = 1, fill = temp_bins)) +
   geom_tile(color = "white", linewidth = 0.1, )  +
   geom_text(aes(y = 1.45,label = bin_letter, color = temp_bins), 
             size = 4, fontface = "bold") +
@@ -388,7 +389,7 @@ ggplot(bin, aes(x = datetime, y = 1, fill = temp_bins)) +
 ### I like it better without the rolling averages, so let's go with this one!
 
 # Create a purchasing list
-bead_shopping_list <- bin %>%
+bead_shopping_list <- bin1 %>%
   group_by(temp_bins) %>%
   summarise(beads_per_bracelet = n()) %>%
   mutate(
