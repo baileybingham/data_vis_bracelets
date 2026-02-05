@@ -9,11 +9,16 @@
 # represented by 52 beads (i.e. if using size 8/0 (3mm)beads, a wrist length 
 # of 6.5"). 
 
+
+# When measured, 8/0 beads are more like 12 per inch, so let's use 78 units per 6.5" wrist. 
+
 # If we bin the year by every 3 days, then we would need 121 beads to cover
 # the full year, or 61 to cover 6 months. 
-# So the smallest bracelet size would cover 156 days (6.5"; May 1st-October 3rd), and the largest
-# would cover 228 days (9.5"; March 26-November 8).
 
+# 6.5" wrist = 78 beads = 234 days = March 25th - November 14th
+# 7.5" wrist = 90 beads = 270 days = March 7th - December 1st
+# 8.5" wrist = 102 beads = 306 days = February 16th - December 19th
+# 9.5" wrist = 120 beads = 360 days = January 1st - December 26th 
 
 # The temps should be binned into about 8-10 bins, so that there are no more 
 # than that many colours to bead. 
@@ -25,18 +30,6 @@ library(lubridate)
 library(zoo)
 
 ### IMPORT AGGREGATED DAILY TOMST DATA ###
-eccc<-read.csv("~/1. PhD Research/GitHub/Growth-chambers/export_data/ECCC_dailymeantemp_1996-2025.csv") %>%
-  drop_na()%>%
-  # Read datetime as a date
-  mutate(dummydate = ymd(dummydate)) %>% 
-  # change column headers
-  select(dummydate,Mean_Temp, Max_Temp, Min_Temp)  %>%
-  rename(
-    eccc_mean_temp = Mean_Temp,
-    eccc_max_temp = Max_Temp,
-    eccc_min_temp = Min_Temp
-  )
-
 tomst<-read.csv("~/1. PhD Research/GitHub/TOMST-QHI/export_data/2025_TOMSTdata_preprocessed_daily.csv") %>%
     # Read datetime as a date
   mutate(datetime = ymd(datetime))%>%
@@ -131,6 +124,7 @@ ggplot(rollavg, aes(x = datetime, y = rolling_avg)) +
        x = "Date",
        y = "Mean Daily Air Temperature") 
 
+##### Bracelet pattern with rolling average #################################
   # Bin the year into 3 day sections by rolling average
 rollbinned<- rollavg %>%
   slice(seq(1, n(), by = 3)) %>%
@@ -151,7 +145,7 @@ cropbinned$temp_bins <- cut(cropbinned$rolling_avg,
                     include.lowest = TRUE)
 unique(cropbinned$temp_bins) # view the bins
 
-# Create a 15-color palette from "RdBu" (Red to Blue)
+# Create a 11-color palette from "RdBu" (Red to Blue)
 my_colors <- colorRampPalette(c("darkblue","blue", "white","red", "darkred"))(12)
 
 ggplot(cropbinned, aes(x = datetime, y = 1, fill = temp_bins)) +
@@ -231,7 +225,7 @@ ggplot(maxcrop, aes(x = datetime, y = 1, fill = temp_bins)) +
   )
 
 
-
+######### FINAL VERSION 1.0 ####################################################
 #################################################################################
 #### Let's try it without the rolling average ####
 
@@ -318,3 +312,92 @@ bead_shopping_list <- crop %>%
   select(letter, beads_per_bracelet,total_beads_needed, temp_range)
 
 print(bead_shopping_list)
+
+########## FINAL VERSION 2.0 #################################################
+###############################################################################
+### Second attempt for bigger wrists ###
+# Bin the year into 3 day sections by rolling average
+
+range(bin$QHI_mean, na.rm = TRUE)
+
+# Define your temperature range
+min_temp <- -19.5
+max_temp <- 19
+breaks_seq <- seq(min_temp, max_temp, length.out = 1)
+
+# 2. Pre-process the data: 
+# Replace anything lower than -19.5 with -19.5
+bin$QHI_mean <- pmax(bin$QHI_mean, min_temp)
+
+# Create 11 bins
+bin$temp_bins <- cut(bin$QHI_mean, 
+                      breaks = seq(min_temp, max_temp, length.out = 12), 
+                      include.lowest = TRUE)
+unique(bin$temp_bins) # view the bins
+
+# Create a 11-color palette from "RdBu" (Red to Blue)
+my_colors <- colorRampPalette(c(
+  "#0D1B7A", "#044BA5", "#157CAF","#93C6D8", "#EDF2F0", 
+  "#FAF3E0","#F2D379", "#E69804", "#CE6001","#C60C30", "#800020"
+))(11)
+
+# Create letter labels
+num_bins <- length(levels(bin$temp_bins))
+# change legend labels
+raw_levels <- levels(bin$temp_bins)
+# Use regex to remove brackets [ ] and parentheses ( )
+# We then replace the comma with "°C to " and add "°C" to the end
+clean_levels <- gsub("[^-0-9.]+", " ", raw_levels)
+clean_levels <- trimws(clean_levels)
+clean_levels <- gsub(" ", "°C to ", clean_levels)
+clean_levels <- paste0(clean_levels, "°C")
+# Combine with the LETTERS for your final legend text
+letter_labels <- paste0(LETTERS[1:num_bins], ": ", clean_levels)
+letter_labels[1] <- "A: Below -16°C"
+bin$bin_letter <- LETTERS[as.numeric(bin$temp_bins)]
+text_colours <- c("white", "white", "white", "white", "white", 
+                  "black", "black", "white", "white", "white",
+                  "white", "white", "white", "white")
+
+
+
+ggplot(bin, aes(x = datetime, y = 1, fill = temp_bins)) +
+  geom_tile(color = "white", linewidth = 0.1, )  +
+  geom_text(aes(y = 1.45,label = bin_letter, color = temp_bins), 
+            size = 4, fontface = "bold") +
+  # Apply the conditional text colours
+  scale_color_manual(values = text_colours, guide = "none") + 
+  scale_fill_manual(values = my_colors, labels = letter_labels)+ 
+  scale_x_date (breaks = seq(as.Date("2023-01-01"), as.Date("2023-12-31"), by = "1 week"), 
+                date_labels = "%b %d") +
+  labs(
+    #   title = "2023 Growing Season on Qikiqtaruk - Herschel Island",
+    #  subtitle = "Daily average temperature ranges over 3 day periods on QHI.",
+    x = "Date", 
+    fill = "Bead colour and Temp range (°C)") +
+  theme_minimal()  +
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y  = element_blank(),
+    #panel.grid = element_blank(), 
+    axis.ticks.x = element_line(color = "black"),
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, size = 12),
+    legend.text = element_text(size = 12)
+  )
+
+### I like it better without the rolling averages, so let's go with this one!
+
+# Create a purchasing list
+bead_shopping_list <- bin %>%
+  group_by(temp_bins) %>%
+  summarise(beads_per_bracelet = n()) %>%
+  mutate(
+    letter = LETTERS[1:n()],
+    # Multiply the daily count by 100
+    total_beads_needed = beads_per_bracelet * 100,
+    temp_range = clean_levels # Uses "-16°C to -12.5°C" format
+  ) %>%
+  select(letter, beads_per_bracelet,total_beads_needed, temp_range)
+
+print(bead_shopping_list)
+
