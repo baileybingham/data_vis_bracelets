@@ -357,7 +357,7 @@ letter_labels <- paste0(LETTERS[1:num_bins], ": ", clean_levels)
 letter_labels[1] <- "A: Below -19.5°C"
 bin1$bin_letter <- LETTERS[as.numeric(bin1$temp_bins)]
 text_colours <- c("white", "white", "white", "white", "black", 
-                  "black", "black", "black", "white", "white",
+                  "black", "black", "black", "black", "white",
                   "white", "white", "white", "white")
 
 
